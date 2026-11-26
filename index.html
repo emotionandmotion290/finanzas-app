@@ -1,1 +1,32 @@
-<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Finanzas</title><body style="font-family:system-ui;padding:2em">Finanzas: en preparación.</body></html>
+<!doctype html><html lang=es><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name=theme-color content="#0f1420"><link rel=manifest href=manifest.webmanifest><link rel=icon href=icon-192.png><link rel=apple-touch-icon href=icon-192.png>
+<title>Finanzas</title><style>
+body{font-family:-apple-system,Segoe UI,sans-serif;background:#0f1420;color:#e8ecf4;margin:0;padding:16px;max-width:560px;margin:auto}
+#lock{margin-top:30vh;text-align:center} input{width:100%;box-sizing:border-box;padding:14px;border-radius:12px;border:1px solid #243049;background:#182033;color:#e8ecf4;font-size:16px}
+button{background:#3b6cff;color:#fff;border:0;border-radius:12px;padding:12px 18px;font-size:16px;width:100%;margin:12px 0}
+.gray{color:#8a96ad;font-size:13px} label{font-size:13px;color:#8a96ad}
+</style></head><body>
+<div id=lock><h1>Finanzas</h1><input id=k type=password placeholder="Clave" autocomplete=off>
+<label><input type=checkbox id=rem style="width:auto"> Recordar la clave en este móvil</label>
+<button onclick="go()">Abrir</button><div class=gray id=err></div></div><div id=app hidden></div>
+<script>
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function dec(pass,d){
+ const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);
+ const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(d.salt),iterations:d.it,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+ const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(d.iv)},key,b64(d.ct));
+ return new TextDecoder().decode(pt)}
+async function go(auto){
+ const pass=auto||document.getElementById('k').value.trim(); const e=document.getElementById('err'); e.textContent='';
+ if(!pass)return;
+ try{const r=await fetch('datos.enc?'+Date.now()); const d=await r.json(); const html=await dec(pass,d);
+  if(!auto&&document.getElementById('rem').checked)localStorage.setItem('fk',pass);
+  document.getElementById('lock').hidden=true; const a=document.getElementById('app'); a.innerHTML=html; a.hidden=false;
+ }catch(x){e.textContent='No se pudo abrir: clave incorrecta o sin datos.'; if(auto)localStorage.removeItem('fk')}}
+function act(){const t='Actualiza Finanzas';const m=document.getElementById('msg');
+ if(navigator.clipboard)navigator.clipboard.writeText(t);
+ if(m)m.textContent='Copiado: "'+t+'". Pégalo en el chat Finanzas personales y te mando la versión nueva.'}
+document.getElementById('k').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+const s=localStorage.getItem('fk'); if(s)go(s);
+</script></body></html>
